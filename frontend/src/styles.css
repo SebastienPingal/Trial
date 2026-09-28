@@ -1,0 +1,367 @@
+:root {
+  --bg: #1d1a17;
+  --panel: #2a2520;
+  --wood: #5a3e2b;
+  --text: #f1e9dd;
+  --muted: #b3a795;
+  --accent: #d9a441;
+  --danger: #d9534f;
+  --ok: #5cb85c;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+}
+
+.screen {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 96px;
+}
+
+h1,
+h2 {
+  font-weight: normal;
+  letter-spacing: 0.02em;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #1d1a17;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.error {
+  color: var(--danger);
+}
+
+/* Intro */
+
+.situation {
+  font-size: 1.15rem;
+  line-height: 1.6;
+}
+
+.evidence-list {
+  line-height: 1.7;
+}
+
+.evidence-id {
+  display: inline-block;
+  min-width: 2.2em;
+  font-family: monospace;
+  color: var(--accent);
+}
+
+.hint {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Trial */
+
+.trial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.trial-header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.courtroom {
+  display: grid;
+  gap: 24px;
+  margin: 24px 0;
+  padding: 16px;
+  background: var(--wood);
+  border-radius: 8px;
+}
+
+.jury-box,
+.bench {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Characters: --intensity (0..1) scales how pronounced a reaction is. */
+
+.character {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 280px;
+}
+
+.character-face {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--panel);
+  display: grid;
+  place-items: center;
+  font-size: 48px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.character-portrait {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  font-size: 28px;
+}
+
+.character figcaption {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  gap: 2px;
+}
+
+.character-role {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.character-caption {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-radius: 6px;
+  font-style: italic;
+}
+
+.expr-convinced .character-face,
+.expr-confident .character-face {
+  transform: translateY(calc(var(--intensity) * -6px));
+  box-shadow: 0 0 calc(var(--intensity) * 18px) var(--ok);
+}
+
+.expr-doubt .character-face,
+.expr-suspicious .character-face {
+  transform: rotate(calc(var(--intensity) * -8deg));
+  box-shadow: 0 0 calc(var(--intensity) * 14px) var(--accent);
+}
+
+.expr-shocked .character-face,
+.expr-panic .character-face,
+.expr-attacking .character-face {
+  transform: scale(calc(1 + var(--intensity) * 0.12));
+  box-shadow: 0 0 calc(var(--intensity) * 22px) var(--danger);
+}
+
+.expr-panic .character-face {
+  animation: shake 0.4s ease-in-out calc(var(--intensity) * 3);
+}
+
+@keyframes shake {
+  25% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 3px 0;
+  }
+}
+
+/* Objection */
+
+.objection-banner {
+  text-align: center;
+  padding: 12px 16px;
+  border: 2px solid var(--danger);
+  border-radius: 8px;
+  animation: slam 0.3s ease-out;
+}
+
+.objection-banner h2 {
+  margin: 0 0 8px;
+  font-size: 2.4rem;
+  color: var(--danger);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.objection-banner.warning {
+  border-color: var(--accent);
+}
+
+.objection-banner.warning h2 {
+  color: var(--accent);
+  font-size: 1.8rem;
+}
+
+@keyframes slam {
+  from {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Answer */
+
+.answer-input {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.answer-input textarea {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 1rem;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--muted);
+  background: var(--panel);
+  color: var(--text);
+  resize: vertical;
+}
+
+.submitted-answer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Evidence file */
+
+.evidence-file {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  max-width: min(420px, calc(100vw - 32px));
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 10;
+}
+
+.evidence-file ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.evidence-file li {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.evidence-file li p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.evidence-file li.highlight {
+  outline: 2px solid var(--danger);
+  background: rgba(217, 83, 79, 0.15);
+}
+
+/* Verdict */
+
+.verdict-screen h1 {
+  text-align: center;
+  font-size: 3rem;
+}
+
+.verdict-screen h1.acquitted {
+  color: var(--ok);
+}
+
+.verdict-screen h1.convicted {
+  color: var(--danger);
+}
+
+.juror-verdicts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.juror-verdict {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.juror-verdict h2 {
+  margin-top: 0;
+}
+
+.conviction-chart {
+  width: 100%;
+  height: auto;
+}
+
+.conviction-chart polyline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.conviction-chart .threshold {
+  stroke: var(--muted);
+  stroke-dasharray: 4 4;
+}
+
+.conviction-chart circle {
+  fill: var(--accent);
+}
+
+.conviction-chart circle.turning-point {
+  fill: var(--text);
+}
+
+.conviction-chart circle.objection {
+  fill: var(--danger);
+}
+
+.turning-point-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+}

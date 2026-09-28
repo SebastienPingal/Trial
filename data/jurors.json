@@ -1,0 +1,20 @@
+[
+  {
+    "id": "juror_marthe",
+    "name": "Marthe",
+    "portrait": "👵",
+    "description": "a retiree who is sensitive to sincerity and emotion"
+  },
+  {
+    "id": "juror_karim",
+    "name": "Karim",
+    "portrait": "👨‍🔧",
+    "description": "an engineer who only believes what fits the facts and the timeline"
+  },
+  {
+    "id": "juror_lea",
+    "name": "Léa",
+    "portrait": "👩‍🎓",
+    "description": "a student who is suspicious of the prosecution and of stories that are too polished"
+  }
+]

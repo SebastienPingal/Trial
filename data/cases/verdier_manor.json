@@ -1,0 +1,30 @@
+{
+  "id": "verdier_manor",
+  "title": "The Verdier Manor Affair",
+  "situation": "On March 14 at 11:10 PM, you were found in the living room of Verdier Manor, kneeling beside the body of Henri Verdier, your hands covered in blood.",
+  "evidence": [
+    { "id": "P1", "name": "Blood on your hands", "description": "The blood on your hands belongs to the victim." },
+    { "id": "P2", "name": "Phone call", "description": "The victim called you at 10:45 PM. The call lasted 2 minutes." },
+    { "id": "P3", "name": "Witness", "description": "The neighbor saw a silhouette leave the manor through the garden around 10:50 PM." },
+    { "id": "P4", "name": "Knife", "description": "The weapon was found in the kitchen, with no fingerprints." },
+    { "id": "P5", "name": "Footprints", "description": "Muddy size 44 (US 10.5) footprints in the hallway. You wear a size 42 (US 9)." },
+    { "id": "P6", "name": "Window", "description": "The study window was broken from the inside." }
+  ],
+  "prosecutorQuestions": [
+    "Why were you at the manor that night?",
+    "What time did you arrive?",
+    "What did the victim tell you on the phone?",
+    "How do you explain the blood on your hands?",
+    "Did you go into the kitchen?",
+    "Did you see anyone else in the house?"
+  ],
+  "jurors": ["juror_marthe", "juror_karim", "juror_lea"],
+  "mockHints": [
+    { "evidenceId": "P1", "patterns": ["not his blood", "my own blood", "wasn't blood", "no blood", "paint"] },
+    { "evidenceId": "P2", "patterns": ["never called", "didn't call", "no call", "didn't talk", "never spoke"] },
+    { "evidenceId": "P3", "patterns": ["nobody left", "no one left", "no one else", "nobody else", "alone all"] },
+    { "evidenceId": "P4", "patterns": ["my knife", "i held the knife", "i picked up the knife", "i washed the knife"] },
+    { "evidenceId": "P5", "patterns": ["size 44", "my boots", "my footprints", "my shoes in the hallway"] },
+    { "evidenceId": "P6", "patterns": ["i broke the window", "broke in through the window", "from outside"] }
+  ]
+}
