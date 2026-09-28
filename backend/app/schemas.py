@@ -67,12 +67,28 @@ class Statement(CamelModel):
     answer: str
 
 
+TypingEventKind = Literal["heavy-deleting", "long-hesitation", "rushing"]
+
+
+class TypingSummary(CamelModel):
+    """How the defendant typed the answer (demeanor), measured by the frontend."""
+
+    duration_ms: int
+    time_to_first_key_ms: int | None = None
+    chars_typed: int
+    chars_deleted: int
+    longest_pause_ms: int
+    chars_per_second: float
+    events: list[TypingEventKind] = Field(default_factory=list)
+
+
 class EvaluationRequest(CamelModel):
     case_id: str
     history: list[Statement] = Field(default_factory=list)
     question_index: int
     answer: str
     mode: Literal["preview", "final"] = "final"
+    typing: TypingSummary | None = None
 
 
 class ScoreResult(CamelModel):

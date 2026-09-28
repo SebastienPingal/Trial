@@ -1,5 +1,7 @@
 // Mirrors backend/app/schemas.py (camelCase on the wire).
 
+import type { TypingSummary } from './game/typingEvents';
+
 export interface Evidence {
   id: string;
   name: string;
@@ -40,6 +42,7 @@ export interface EvaluationRequest {
   questionIndex: number;
   answer: string;
   mode: EvaluationMode;
+  typing?: TypingSummary;
 }
 
 export interface ScoreResult {

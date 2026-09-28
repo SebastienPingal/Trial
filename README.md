@@ -22,7 +22,9 @@ frontend/           React + Vite + TypeScript
   src/
     game/reactions.ts   Thresholds: evaluation -> expressions / objections
     game/verdict.ts     Juror conviction and final vote
-    hooks/useLivePreview.ts  Debounced preview evaluation while typing
+    game/typingEvents.ts     Typing events (deleting, hesitation, rushing) and their effects
+    hooks/useTypingTracker.ts  Detects typing events while the player answers
+    hooks/useEventPreview.ts   Evaluations triggered by typing events
     screens/            Intro, Trial, Verdict
 ```
 
@@ -57,7 +59,7 @@ To switch to Jev, set `EVALUATOR=jev`, `JEV_API_KEY`, `JEV_API_URL` and a pinned
 - [x] Static courtroom UI, characters, answer input, case file
 - [x] Question loop with the mock evaluator
 - [x] Reactions and objections wired to thresholds
-- [x] Live preview evaluation while typing
+- [x] Typing events with instant reactions, sent to Jev as demeanor
 - [x] Verdict and summary screen
 - [ ] Real Jev call (`evaluators/jev.py`)
 - [ ] Threshold tuning with real playthroughs

@@ -23,7 +23,7 @@ The three question types:
 1. Intro screen: presentation of the case.
 2. Case file available at any time: the evidence.
 3. The prosecutor asks question N (pre-written text).
-4. The player types their answer. After ~800 ms of inactivity, a "preview" evaluation updates the faces in a subdued way.
+4. The player types their answer. Typing events (heavy deleting, long hesitation, rushing) make the faces react instantly, and some of them trigger a "preview" evaluation of the partial answer.
 5. The player submits. Full evaluation, full reactions, possible "Objection!" moment where the prosecutor brandishes the contradicted evidence.
 6. The submitted answer is added to the statement history.
 7. Next question. After the last question: deliberation and verdict.
@@ -87,11 +87,27 @@ Also use the returned **confidence**: if it is low, keep a subdued reaction rath
 
 Objections only trigger **on submit**, never in preview, otherwise the player gets interrupted mid-sentence.
 
-## 8. Live evaluation while typing
+## 8. Evaluation timing and typing events
 
-- Trigger a request after 800 ms without a keystroke, only if the text changed and is at least ~15 characters long.
+There is no evaluation on a timer. Requests are sent:
+
+- **On submit**: the full evaluation, sent instantly when the player answers.
+- **On specific typing events**: a "preview" evaluation of the partial answer, only for events configured to do so.
+
+The frontend watches how the player types (`frontend/src/hooks/useTypingTracker.ts`) and emits **typing events**:
+
+| Event | Detection (starting thresholds) | Local reaction | Evaluates? |
+|---|---|---|---|
+| `heavy-deleting` | ≥ 15 characters erased in one burst | jurors doubt, lawyer panics, prosecutor suspicious | yes |
+| `long-hesitation` | 5 s idle mid-answer, or 8 s before the first keystroke | jurors doubt, prosecutor suspicious | no |
+| `rushing` | > 7 characters/second over at least 25 characters | prosecutor suspicious | no |
+
+Each event is defined in one place (`TYPING_EVENT_EFFECTS` in `frontend/src/game/typingEvents.ts`): its instant local reaction, how long it lasts, and whether it triggers an evaluation. New events are added there.
+
+Typing behavior is also sent to Jev: every evaluation carries a typing summary (duration, characters typed and erased, longest pause, speed, events), turned into a plain-language `defendant_demeanor` in the state. Juror questions ask them to consider both the answer and the demeanor.
+
 - Number each request and ignore any response arriving after a more recent one (the network does not guarantee ordering).
-- In preview mode, expressions move halfway (an eyebrow, a slight movement); on submit, they display fully.
+- Preview reactions are drawn at half strength; objections only happen on submit.
 - Published quotas: 250,000 tokens per second and 1,200 requests per minute, plenty for a single player with this system.
 
 ## 9. Verdict
@@ -122,7 +138,7 @@ A final screen shows each juror's evolution and the moments that made them switc
 2. Question loop with the mock evaluator.
 3. Reaction and objection system wired to the thresholds.
 4. Backend and real Jev call, on submit only.
-5. Live evaluation while typing.
+5. Typing events and event-triggered evaluations.
 6. Verdict and summary screen.
 7. Threshold tuning with real playthroughs, then adding new cases.
 8. Later, possibly: an LLM that generates prosecutor follow-up questions based on the flaws detected by Jev.

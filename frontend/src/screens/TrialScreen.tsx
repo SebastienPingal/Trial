@@ -1,12 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { evaluate } from '../api';
 import { AnswerInput } from '../components/AnswerInput';
 import { Courtroom } from '../components/Courtroom';
 import { EvidenceFile } from '../components/EvidenceFile';
 import { ObjectionBanner } from '../components/ObjectionBanner';
 import { computeReactions, type CourtReaction } from '../game/reactions';
+import {
+  applyEventReaction,
+  TYPING_EVENT_EFFECTS,
+  type TypingEvent,
+  type TypingEventEffect,
+} from '../game/typingEvents';
 import type { TurnRecord } from '../game/verdict';
-import { useLivePreview } from '../hooks/useLivePreview';
+import { useEventPreview } from '../hooks/useEventPreview';
+import { useTypingTracker } from '../hooks/useTypingTracker';
 import type { CaseView, Statement } from '../types';
 
 type Phase = 'answering' | 'evaluating' | 'reacting';
@@ -34,18 +41,52 @@ export function TrialScreen({ caseView, onFinish }: TrialScreenProps) {
     [caseView.id, history, questionIndex],
   );
 
-  const { preview, invalidate } = useLivePreview(base, answer, phase === 'answering');
+  const { preview, requestPreview, invalidate } = useEventPreview();
 
+  // Short-lived local reaction triggered by a typing event (hesitation, deleting…).
+  const [eventOverlay, setEventOverlay] = useState<TypingEventEffect['reaction'] | null>(null);
+  const overlayTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(overlayTimer.current), []);
+
+  const handleTypingEvent = (event: TypingEvent) => {
+    const effect = TYPING_EVENT_EFFECTS[event.kind];
+    window.clearTimeout(overlayTimer.current);
+    setEventOverlay(effect.reaction);
+    overlayTimer.current = window.setTimeout(() => setEventOverlay(null), effect.reaction.durationMs);
+
+    if (effect.evaluate && event.text.trim()) {
+      requestPreview({ ...base, answer: event.text.trim(), typing: tracker.getSummary() });
+    }
+  };
+
+  const tracker = useTypingTracker(phase === 'answering', handleTypingEvent);
+
+  const handleAnswerChange = (value: string) => {
+    setAnswer(value);
+    tracker.track(value);
+  };
+
+  const previewReaction = preview && phase === 'answering' ? computeReactions(preview, 'preview') : null;
   const reaction =
-    phase === 'reacting' ? finalReaction : preview && phase === 'answering' ? computeReactions(preview, 'preview') : null;
+    phase === 'reacting'
+      ? finalReaction
+      : eventOverlay && phase === 'answering'
+        ? applyEventReaction(
+            previewReaction,
+            caseView.jurors.map((j) => j.id),
+            eventOverlay,
+          )
+        : previewReaction;
 
   const handleSubmit = async () => {
     const text = answer.trim();
     invalidate();
+    window.clearTimeout(overlayTimer.current);
+    setEventOverlay(null);
     setPhase('evaluating');
     setError(null);
     try {
-      const result = await evaluate({ ...base, answer: text, mode: 'final' });
+      const result = await evaluate({ ...base, answer: text, mode: 'final', typing: tracker.getSummary() });
       const courtReaction = computeReactions(result, 'final');
       setTurns((previous) => [...previous, { question, answer: text, result, action: courtReaction.prosecutor.action }]);
       setFinalReaction(courtReaction);
@@ -64,6 +105,7 @@ export function TrialScreen({ caseView, onFinish }: TrialScreenProps) {
     }
     setQuestionIndex((i) => i + 1);
     setAnswer('');
+    tracker.reset();
     setFinalReaction(null);
     setEvidenceOpen(false);
     setPhase('answering');
@@ -96,7 +138,7 @@ export function TrialScreen({ caseView, onFinish }: TrialScreenProps) {
           </button>
         </div>
       ) : (
-        <AnswerInput value={answer} onChange={setAnswer} onSubmit={handleSubmit} disabled={phase === 'evaluating'} />
+        <AnswerInput value={answer} onChange={handleAnswerChange} onSubmit={handleSubmit} disabled={phase === 'evaluating'} />
       )}
 
       {error && <p className="error">{error}</p>}

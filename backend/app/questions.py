@@ -12,8 +12,29 @@ from .schemas import Case, EvaluationRequest, Juror
 SCORE_SCALE_1_TO_5 = ["1", "2", "3", "4", "5"]
 
 
+EVENT_DESCRIPTIONS = {
+    "heavy-deleting": "erased a large part of what they had written",
+    "long-hesitation": "hesitated for a long time",
+    "rushing": "typed unusually fast",
+}
+
+
+def describe_demeanor(request: EvaluationRequest) -> str | None:
+    """Plain-language summary of how the answer was typed, for Jev to factor in."""
+    typing = request.typing
+    if typing is None:
+        return None
+    parts = [
+        f"took {typing.duration_ms / 1000:.0f} seconds to answer",
+        f"typed {typing.chars_typed} characters and erased {typing.chars_deleted}",
+        f"longest pause was {typing.longest_pause_ms / 1000:.1f} seconds",
+    ]
+    parts += [EVENT_DESCRIPTIONS[e] for e in dict.fromkeys(typing.events)]
+    return "While answering, the defendant " + "; ".join(parts) + "."
+
+
 def build_state(case: Case, request: EvaluationRequest) -> dict[str, Any]:
-    return {
+    state = {
         "situation": case.situation,
         "evidence": [{"id": e.id, "name": e.name, "description": e.description} for e in case.evidence],
         "previous_statements": [
@@ -23,6 +44,10 @@ def build_state(case: Case, request: EvaluationRequest) -> dict[str, Any]:
         "current_question": case.prosecutor_questions[request.question_index],
         "current_answer": request.answer,
     }
+    demeanor = describe_demeanor(request)
+    if demeanor:
+        state["defendant_demeanor"] = demeanor
+    return state
 
 
 def build_questions(case: Case, jurors: list[Juror], request: EvaluationRequest) -> list[dict[str, Any]]:
@@ -88,7 +113,10 @@ def build_questions(case: Case, jurors: list[Juror], request: EvaluationRequest)
             {
                 "id": juror.id,
                 "type": "score",
-                "question": f"{juror.name}, {juror.description}, is a juror. Does {juror.name} believe this answer?",
+                "question": (
+                    f"{juror.name}, {juror.description}, is a juror. Considering both the answer "
+                    f"and the defendant's demeanor, does {juror.name} believe this answer?"
+                ),
                 "scale": [
                     "1: not at all",
                     "2: barely",

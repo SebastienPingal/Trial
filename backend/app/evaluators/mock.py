@@ -37,10 +37,24 @@ EMOTION_MARKERS = ["scared", "sorry", "afraid", "friend", "loved", "panicked", "
 TIME_PATTERN = re.compile(r"\b\d{1,2}([:h]\d{2})?\s*(am|pm)?\b|\bo'clock\b|\bminutes?\b")
 
 # Per-juror personality tweaks for the mock only (the real Jev reads the juror description).
+# The last three keys react to typing events (demeanor).
 JUROR_BIAS = {
-    "juror_marthe": {"emotion": 0.7, "time": 0.0, "evidence": -1.0, "polish": 0.0},
-    "juror_karim": {"emotion": -0.2, "time": 0.7, "evidence": -2.5, "polish": 0.0},
-    "juror_lea": {"emotion": 0.2, "time": 0.0, "evidence": -1.2, "polish": -0.8},
+    "juror_marthe": {
+        "emotion": 0.7, "time": 0.0, "evidence": -1.0, "polish": 0.0,
+        "heavy-deleting": -0.2, "long-hesitation": 0.2, "rushing": -0.2,
+    },
+    "juror_karim": {
+        "emotion": -0.2, "time": 0.7, "evidence": -2.5, "polish": 0.0,
+        "heavy-deleting": -0.5, "long-hesitation": -0.3, "rushing": 0.0,
+    },
+    "juror_lea": {
+        "emotion": 0.2, "time": 0.0, "evidence": -1.2, "polish": -0.8,
+        "heavy-deleting": -0.2, "long-hesitation": 0.0, "rushing": -0.5,
+    },
+}
+DEFAULT_BIAS = {
+    "emotion": 0.0, "time": 0.0, "evidence": -1.5, "polish": 0.0,
+    "heavy-deleting": -0.3, "long-hesitation": -0.2, "rushing": -0.2,
 }
 
 
@@ -113,9 +127,12 @@ class MockEvaluator(Evaluator):
             3.3 + detail_bonus - 2.0 * evidence_p - 1.5 * statement_p - 0.6 * (evasive_mean - 1) / 4 * 2
         ) + rng.uniform(-0.3, 0.3)
 
+        # Each distinct typing event counts once per answer.
+        typing_events = set(request.typing.events) if request.typing else set()
+
         juror_scores: dict[str, ScoreResult] = {}
         for juror in jurors:
-            bias = JUROR_BIAS.get(juror.id, {"emotion": 0.0, "time": 0.0, "evidence": -1.5, "polish": 0.0})
+            bias = JUROR_BIAS.get(juror.id, DEFAULT_BIAS)
             mean = (
                 3.3
                 + detail_bonus
@@ -125,6 +142,7 @@ class MockEvaluator(Evaluator):
                 + bias["evidence"] * evidence_p
                 - 1.5 * statement_p
                 - 0.5 * (evasive_mean - 1) / 4 * 2
+                + sum(bias[event] for event in typing_events)
                 + rng.uniform(-0.4, 0.4)
             )
             juror_scores[juror.id] = _score(mean)
