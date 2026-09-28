@@ -1,5 +1,5 @@
-import type { ProsecutorAction } from '../game/reactions';
-import type { Evidence, Statement } from '../types';
+import type { ProsecutorAction } from '../../../core/reactions';
+import type { Evidence, Statement } from '../../../core/types';
 
 interface ObjectionBannerProps {
   action: ProsecutorAction;

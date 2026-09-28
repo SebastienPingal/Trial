@@ -1,6 +1,6 @@
-// Mirrors backend/app/schemas.py (camelCase on the wire).
+// Domain types. Mirrors backend/app/schemas.py (camelCase on the wire).
 
-import type { TypingSummary } from './game/typingEvents';
+import type { TypingSummary } from '../typing/types';
 
 export interface Evidence {
   id: string;

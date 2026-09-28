@@ -1,4 +1,4 @@
-import type { EvaluationResult, Juror } from '../types';
+import type { EvaluationResult, Juror } from './types';
 import type { ProsecutorAction } from './reactions';
 
 // A submitted answer with its full evaluation.

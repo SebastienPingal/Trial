@@ -12,13 +12,6 @@ from .schemas import Case, EvaluationRequest, Juror
 SCORE_SCALE_1_TO_5 = ["1", "2", "3", "4", "5"]
 
 
-EVENT_DESCRIPTIONS = {
-    "heavy-deleting": "erased a large part of what they had written",
-    "long-hesitation": "hesitated for a long time",
-    "rushing": "typed unusually fast",
-}
-
-
 def describe_demeanor(request: EvaluationRequest) -> str | None:
     """Plain-language summary of how the answer was typed, for Jev to factor in."""
     typing = request.typing
@@ -29,7 +22,7 @@ def describe_demeanor(request: EvaluationRequest) -> str | None:
         f"typed {typing.chars_typed} characters and erased {typing.chars_deleted}",
         f"longest pause was {typing.longest_pause_ms / 1000:.1f} seconds",
     ]
-    parts += [EVENT_DESCRIPTIONS[e] for e in dict.fromkeys(typing.events)]
+    parts += list(dict.fromkeys(e.description for e in typing.events))
     return "While answering, the defendant " + "; ".join(parts) + "."
 
 

@@ -37,7 +37,7 @@ EMOTION_MARKERS = ["scared", "sorry", "afraid", "friend", "loved", "panicked", "
 TIME_PATTERN = re.compile(r"\b\d{1,2}([:h]\d{2})?\s*(am|pm)?\b|\bo'clock\b|\bminutes?\b")
 
 # Per-juror personality tweaks for the mock only (the real Jev reads the juror description).
-# The last three keys react to typing events (demeanor).
+# The last three keys react to typing events (demeanor); unknown events have no effect.
 JUROR_BIAS = {
     "juror_marthe": {
         "emotion": 0.7, "time": 0.0, "evidence": -1.0, "polish": 0.0,
@@ -128,7 +128,7 @@ class MockEvaluator(Evaluator):
         ) + rng.uniform(-0.3, 0.3)
 
         # Each distinct typing event counts once per answer.
-        typing_events = set(request.typing.events) if request.typing else set()
+        typing_events = {e.kind for e in request.typing.events} if request.typing else set()
 
         juror_scores: dict[str, ScoreResult] = {}
         for juror in jurors:
@@ -142,7 +142,7 @@ class MockEvaluator(Evaluator):
                 + bias["evidence"] * evidence_p
                 - 1.5 * statement_p
                 - 0.5 * (evasive_mean - 1) / 4 * 2
-                + sum(bias[event] for event in typing_events)
+                + sum(bias.get(event, 0.0) for event in typing_events)
                 + rng.uniform(-0.4, 0.4)
             )
             juror_scores[juror.id] = _score(mean)

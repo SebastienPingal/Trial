@@ -1,4 +1,5 @@
-import type { EvaluationMode, EvaluationResult, ScoreResult } from '../types';
+import type { EvaluationMode, EvaluationResult, ScoreResult } from './types';
+import type { TypingEventEffect } from '../typing/types';
 
 // Starting thresholds from the spec — tune them with real playthroughs.
 export const THRESHOLDS = {
@@ -96,5 +97,25 @@ export function computeReactions(result: EvaluationResult, mode: EvaluationMode)
     jurors,
     lawyer,
     prosecutor: { expression: prosecutorExpression, intensity: base, action },
+  };
+}
+
+// Overlays a short-lived reaction (e.g. from a typing event) on top of the current faces.
+export function applyOverlay(
+  base: CourtReaction | null,
+  jurorIds: string[],
+  overlay: TypingEventEffect['reaction'],
+): CourtReaction {
+  const jurors: CourtReaction['jurors'] = {};
+  for (const id of jurorIds) {
+    jurors[id] = overlay.jurors ?? base?.jurors[id] ?? NEUTRAL_EXPRESSION;
+  }
+  return {
+    jurors,
+    lawyer: overlay.lawyer ?? base?.lawyer ?? { expression: 'neutral', intensity: 0 },
+    prosecutor: {
+      ...(overlay.prosecutor ?? base?.prosecutor ?? { expression: 'impassive', intensity: 0 }),
+      action: { kind: 'none' },
+    },
   };
 }

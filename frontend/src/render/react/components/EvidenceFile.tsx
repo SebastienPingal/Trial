@@ -1,4 +1,4 @@
-import type { Evidence } from '../types';
+import type { Evidence } from '../../../core/types';
 
 interface EvidenceFileProps {
   evidence: Evidence[];

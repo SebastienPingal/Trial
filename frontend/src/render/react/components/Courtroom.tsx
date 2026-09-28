@@ -1,5 +1,5 @@
-import { NEUTRAL_EXPRESSION, type CourtReaction } from '../game/reactions';
-import type { Juror } from '../types';
+import { NEUTRAL_EXPRESSION, type CourtReaction } from '../../../core/reactions';
+import type { Juror } from '../../../core/types';
 import { Character } from './Character';
 
 interface CourtroomProps {

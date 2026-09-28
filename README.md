@@ -18,15 +18,39 @@ backend/            Python + FastAPI — holds the Jev API key, never the browse
     questions.py    Jev state + parallel question set
     evaluators/     mock.py (rule-based, default) and jev.py (real API, TODO)
     request_log.py  JSONL log of every evaluation (backend/logs/)
-frontend/           React + Vite + TypeScript
-  src/
-    game/reactions.ts   Thresholds: evaluation -> expressions / objections
-    game/verdict.ts     Juror conviction and final vote
-    game/typingEvents.ts     Typing events (deleting, hesitation, rushing) and their effects
-    hooks/useTypingTracker.ts  Detects typing events while the player answers
-    hooks/useEventPreview.ts   Evaluations triggered by typing events
-    screens/            Intro, Trial, Verdict
+frontend/src/
+  main.ts           Composition root: picks the API, typing plugins and renderer
+  core/             Headless game engine (no UI code)
+    engine.ts         Trial flow state machine, evaluations, verdict
+    eventBus.ts       Typed pub/sub used by the engine
+    state.ts          GameState + bus events (GameEvents)
+    reactions.ts      Thresholds: evaluation -> expressions / objections
+    verdict.ts        Juror conviction and final vote
+  api/              Backend access behind the CourtApi interface
+  typing/           Typing tracker + one plugin file per typing event
+    plugins/          heavyDeleting.ts, longHesitation.ts, rushing.ts
+  render/           Rendering engines behind the Renderer interface
+    react/            DOM renderer (React components, emoji faces)
 ```
+
+## Architecture
+
+The frontend is split into swappable modules that only meet in `main.ts`:
+
+```
+          input()/submit()/next()              state + bus events
+Renderer ─────────────────────────► GameEngine ─────────────────────► Renderer
+                                      │    ▲
+                         evaluate()   │    │ typing events
+                                      ▼    │
+                                   CourtApi  TypingTracker ◄── plugins
+```
+
+- **Rendering engine** — implement `Renderer` (`render/types.ts`): `mount(container, game)` and `destroy()`. Read `game.getState()`, subscribe to `game.bus` (`state:changed`, `typing:event`, `prosecutor:action`, `verdict`…) and call `game.input()`, `game.submit()`, `game.next()`, `game.start()`, `game.restart()`. Then swap `new ReactRenderer()` in `main.ts`.
+- **Typing events** — add a file in `typing/plugins/` that returns a `TypingEventPlugin` (detection in `onInput`/`onTick`, its local reaction, whether it triggers an evaluation, and a description sent to Jev), then register it in `typing/plugins/index.ts`. No backend change needed.
+- **Backend access** — implement `CourtApi` (`api/types.ts`), e.g. an offline in-browser mock, and pass it to the engine in `main.ts`.
+- **Evaluator** (backend) — implement `Evaluator` in `backend/app/evaluators/` and select it with `EVALUATOR`.
+- **Game rules** — thresholds live in `core/reactions.ts` and `core/verdict.ts`.
 
 ## Running locally
 

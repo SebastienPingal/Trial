@@ -1,11 +1,9 @@
-import { useMemo } from 'react';
-import { computeVerdict, INNOCENT_THRESHOLD, type JurorVerdict, type TurnRecord } from '../game/verdict';
-import type { CaseView } from '../types';
+import type { GameState } from '../../../core/state';
+import { INNOCENT_THRESHOLD, type JurorVerdict } from '../../../core/verdict';
+import { useGame } from '../gameContext';
 
 interface VerdictScreenProps {
-  caseView: CaseView;
-  turns: TurnRecord[];
-  onRestart: () => void;
+  state: GameState;
 }
 
 const CHART_WIDTH = 240;
@@ -35,8 +33,10 @@ function ConvictionChart({ verdict }: { verdict: JurorVerdict }) {
   );
 }
 
-export function VerdictScreen({ caseView, turns, onRestart }: VerdictScreenProps) {
-  const verdict = useMemo(() => computeVerdict(caseView.jurors, turns), [caseView.jurors, turns]);
+export function VerdictScreen({ state }: VerdictScreenProps) {
+  const game = useGame();
+  const { verdict, turns } = state;
+  if (!verdict) return null;
 
   return (
     <main className="screen verdict-screen">
@@ -67,7 +67,7 @@ export function VerdictScreen({ caseView, turns, onRestart }: VerdictScreenProps
         })}
       </div>
 
-      <button type="button" className="primary" onClick={onRestart}>
+      <button type="button" className="primary" onClick={() => game.restart()}>
         New trial
       </button>
     </main>

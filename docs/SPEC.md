@@ -71,7 +71,7 @@ Questions sent in parallel (conceptual structure, to adapt to the exact format o
 
 ## 7. Turning results into reactions
 
-Starting thresholds, to be tuned through testing (see `frontend/src/game/reactions.ts`):
+Starting thresholds, to be tuned through testing (see `frontend/src/core/reactions.ts`):
 
 | Signal | Condition | Reaction |
 |---|---|---|
@@ -94,7 +94,7 @@ There is no evaluation on a timer. Requests are sent:
 - **On submit**: the full evaluation, sent instantly when the player answers.
 - **On specific typing events**: a "preview" evaluation of the partial answer, only for events configured to do so.
 
-The frontend watches how the player types (`frontend/src/hooks/useTypingTracker.ts`) and emits **typing events**:
+The frontend watches how the player types (`frontend/src/typing/tracker.ts`) and emits **typing events**, each one a plugin in `frontend/src/typing/plugins/`:
 
 | Event | Detection (starting thresholds) | Local reaction | Evaluates? |
 |---|---|---|---|
@@ -102,7 +102,7 @@ The frontend watches how the player types (`frontend/src/hooks/useTypingTracker.
 | `long-hesitation` | 5 s idle mid-answer, or 8 s before the first keystroke | jurors doubt, prosecutor suspicious | no |
 | `rushing` | > 7 characters/second over at least 25 characters | prosecutor suspicious | no |
 
-Each event is defined in one place (`TYPING_EVENT_EFFECTS` in `frontend/src/game/typingEvents.ts`): its instant local reaction, how long it lasts, and whether it triggers an evaluation. New events are added there.
+Each event is a self-contained plugin file: its detection and thresholds, its instant local reaction and how long it lasts, whether it triggers an evaluation, and the description sent to Jev. New events are added as a new file registered in `typing/plugins/index.ts`.
 
 Typing behavior is also sent to Jev: every evaluation carries a typing summary (duration, characters typed and erased, longest pause, speed, events), turned into a plain-language `defendant_demeanor` in the state. Juror questions ask them to consider both the answer and the demeanor.
 
@@ -120,7 +120,7 @@ A final screen shows each juror's evolution and the moments that made them switc
 
 ## 10. Technical architecture
 
-- **Frontend** (React + Vite + TypeScript): handles display, input, animations and reaction computation.
+- **Frontend** (TypeScript + Vite): a headless game engine (`core/`) with a typed event bus, swappable modules for typing events (`typing/`), backend access (`api/`) and rendering (`render/`, React for now). See the Architecture section of the README.
 - **Backend** (Python + FastAPI, required): receives the state from the game, calls Jev and returns the results. Never put the API key in browser code.
 - **Mock evaluator**: start with a fake module (random values or simple rules) to build the whole interface without depending on the API, then swap it for the real Jev call. Keep the same interface between both so the switch is invisible to the rest of the code.
 

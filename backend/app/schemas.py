@@ -67,7 +67,11 @@ class Statement(CamelModel):
     answer: str
 
 
-TypingEventKind = Literal["heavy-deleting", "long-hesitation", "rushing"]
+class TypingEventRecord(CamelModel):
+    """A typing event fired by a frontend plugin. The description is sent to Jev as-is."""
+
+    kind: str
+    description: str
 
 
 class TypingSummary(CamelModel):
@@ -79,7 +83,7 @@ class TypingSummary(CamelModel):
     chars_deleted: int
     longest_pause_ms: int
     chars_per_second: float
-    events: list[TypingEventKind] = Field(default_factory=list)
+    events: list[TypingEventRecord] = Field(default_factory=list)
 
 
 class EvaluationRequest(CamelModel):

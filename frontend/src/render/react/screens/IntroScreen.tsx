@@ -1,11 +1,12 @@
-import type { CaseView } from '../types';
+import type { CaseView } from '../../../core/types';
+import { useGame } from '../gameContext';
 
 interface IntroScreenProps {
   caseView: CaseView;
-  onStart: () => void;
 }
 
-export function IntroScreen({ caseView, onStart }: IntroScreenProps) {
+export function IntroScreen({ caseView }: IntroScreenProps) {
+  const game = useGame();
   return (
     <main className="screen intro-screen">
       <h1>{caseView.title}</h1>
@@ -25,7 +26,7 @@ export function IntroScreen({ caseView, onStart }: IntroScreenProps) {
         statements. The jury is watching.
       </p>
 
-      <button type="button" className="primary" onClick={onStart}>
+      <button type="button" className="primary" onClick={() => game.start()}>
         Enter the courtroom
       </button>
     </main>
