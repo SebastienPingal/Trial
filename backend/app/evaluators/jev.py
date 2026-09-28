@@ -1,8 +1,14 @@
 """Real evaluator calling Jev (TypeSafe AI).
 
-TODO: the request/response format below is a placeholder. Check the exact
-syntax in TypeSafe's official documentation / SDK and adapt `_build_payload`
-and `_parse_response`. The rest of the game only depends on EvaluationResult.
+API reference: https://docs.typesafe.ai/api
+  POST https://api.typesafe.ai/v1/systemone
+  body:     {"model", "state", "questions": {id: {"type", "instructions", "criteria"}}}
+  response: {"model", "answers": {id: {...}}, "usage": {...}}
+Answer shapes:
+  noul   -> {"type": "noul", "noul": 0.92}
+  choice -> {"type": "choice", "choice": "P1", "probabilities": {...}, "confidence": 0.82}
+  score  -> {"type": "score", "score": 1.6, "legend": {"0": ...}, "probabilities": {"0": ...}, "confidence": 0.78}
+Score levels are numbered from 0; the game uses 1-5, so everything is shifted by +1.
 """
 
 import time
@@ -12,40 +18,91 @@ import httpx
 
 from .. import config
 from ..questions import build_questions, build_state
-from ..schemas import Case, EvaluationRequest, EvaluationResult, Juror
-from .base import Evaluator
+from ..schemas import (
+    Case,
+    ChoiceResult,
+    EvaluationRequest,
+    EvaluationResult,
+    Juror,
+    ProbabilityResult,
+    ScoreResult,
+)
+from .base import Evaluator, EvaluatorError
+
+
+def _score(answer: dict[str, Any]) -> ScoreResult:
+    # Shift Jev's 0-based levels onto the game's 1-5 scale.
+    probabilities = {str(int(level) + 1): p for level, p in answer.get("probabilities", {}).items()}
+    return ScoreResult(
+        value=float(answer["score"]) + 1,
+        probabilities=probabilities,
+        confidence=float(answer.get("confidence", 1.0)),
+    )
+
+
+def _choice(answer: dict[str, Any]) -> ChoiceResult:
+    return ChoiceResult(
+        value=answer["choice"],
+        probabilities=answer.get("probabilities", {}),
+        confidence=float(answer.get("confidence", 1.0)),
+    )
+
+
+def _noul(answer: dict[str, Any]) -> ProbabilityResult:
+    return ProbabilityResult(probability=float(answer["noul"]))
+
+
+NO_STATEMENT = ChoiceResult(value="none", probabilities={"none": 1.0}, confidence=1.0)
 
 
 class JevEvaluator(Evaluator):
     name = "jev"
 
     def __init__(self) -> None:
-        if not config.JEV_API_KEY or not config.JEV_API_URL:
-            raise RuntimeError("EVALUATOR=jev requires JEV_API_KEY and JEV_API_URL to be set")
+        if not config.JEV_API_KEY:
+            raise RuntimeError("EVALUATOR=jev requires JEV_API_KEY (or TYPESAFE_API_KEY) to be set")
         self._client = httpx.AsyncClient(
-            base_url=config.JEV_API_URL,
             headers={"Authorization": f"Bearer {config.JEV_API_KEY}"},
-            timeout=5.0,
+            timeout=config.JEV_TIMEOUT_S,
         )
 
     async def evaluate(self, case: Case, jurors: list[Juror], request: EvaluationRequest) -> EvaluationResult:
-        payload = self._build_payload(case, jurors, request)
-        started = time.perf_counter()
-        response = await self._client.post("", json=payload)
-        response.raise_for_status()
-        latency_ms = (time.perf_counter() - started) * 1000
-        return self._parse_response(response.json(), jurors, latency_ms)
-
-    def _build_payload(self, case: Case, jurors: list[Juror], request: EvaluationRequest) -> dict[str, Any]:
-        # Placeholder shape: one state + all questions, evaluated in parallel by Jev.
-        return {
+        payload = {
             "model": config.JEV_MODEL,
             "state": build_state(case, request),
             "questions": build_questions(case, jurors, request),
         }
+        started = time.perf_counter()
+        try:
+            response = await self._client.post(config.JEV_API_URL, json=payload)
+        except httpx.HTTPError as e:
+            raise EvaluatorError(f"Could not reach Jev: {e}") from e
+        latency_ms = (time.perf_counter() - started) * 1000
 
-    def _parse_response(self, data: dict[str, Any], jurors: list[Juror], latency_ms: float) -> EvaluationResult:
-        # Map Jev's answers (by question id) to EvaluationResult. Record the
-        # model id returned by the API (not the requested one) so threshold
-        # drift after a model update can be traced in the logs.
-        raise NotImplementedError("Adapt to the official Jev response format")
+        if response.status_code != 200:
+            raise EvaluatorError(f"Jev responded {response.status_code}: {response.text[:500]}")
+
+        try:
+            return self._parse(response.json(), jurors, latency_ms)
+        except (KeyError, TypeError, ValueError) as e:
+            raise EvaluatorError(f"Unexpected Jev response: {e!r}") from e
+
+    def _parse(self, data: dict[str, Any], jurors: list[Juror], latency_ms: float) -> EvaluationResult:
+        answers = data["answers"]
+        return EvaluationResult(
+            credibility=_score(answers["credibility"]),
+            statement_contradiction=_noul(answers["statement_contradiction"]),
+            evidence_contradiction=_noul(answers["evidence_contradiction"]),
+            contradicted_evidence=_choice(answers["contradicted_evidence"]),
+            # Only asked once there are previous statements.
+            contradicted_statement=(
+                _choice(answers["contradicted_statement"]) if "contradicted_statement" in answers else NO_STATEMENT
+            ),
+            evasiveness=_score(answers["evasiveness"]),
+            hurts_defense=_noul(answers["hurts_defense"]),
+            jurors={juror.id: _score(answers[juror.id]) for juror in jurors},
+            evaluator=self.name,
+            # The exact version that answered (even when an alias was sent): logged to trace threshold drift.
+            model=data.get("model", config.JEV_MODEL),
+            latency_ms=round(latency_ms, 1),
+        )

@@ -1,15 +1,13 @@
 """Builds the Jev state and the set of parallel questions for one evaluation.
 
-This is the conceptual structure from the spec. The exact wire format must be
-adapted to TypeSafe's official SDK/API documentation (see evaluators/jev.py).
+Format follows TypeSafe's API reference (https://docs.typesafe.ai/api).
 Questions in one request are evaluated independently: none may depend on another.
+Instructions refer to state fields with backticks, as TypeSafe recommends.
 """
 
 from typing import Any
 
 from .schemas import Case, EvaluationRequest, Juror
-
-SCORE_SCALE_1_TO_5 = ["1", "2", "3", "4", "5"]
 
 
 def describe_demeanor(request: EvaluationRequest) -> str | None:
@@ -43,81 +41,71 @@ def build_state(case: Case, request: EvaluationRequest) -> dict[str, Any]:
     return state
 
 
-def build_questions(case: Case, jurors: list[Juror], request: EvaluationRequest) -> list[dict[str, Any]]:
-    evidence_options = [e.id for e in case.evidence] + ["none"]
-    statement_options = [f"S{i + 1}" for i in range(len(request.history))] + ["none"]
+def build_questions(case: Case, jurors: list[Juror], request: EvaluationRequest) -> dict[str, dict[str, Any]]:
+    """Question map in Jev's format: {id: {type, instructions, criteria}}.
 
-    questions: list[dict[str, Any]] = [
-        {
-            "id": "credibility",
+    Score criteria are ordered low to high; Jev numbers the levels from 0,
+    so our 1-5 scales come back as 0-4 (see evaluators/jev.py).
+    """
+    evidence_criteria: dict[str, str | None] = {e.id: f"{e.name}: {e.description}" for e in case.evidence}
+    evidence_criteria["none"] = "The answer contradicts none of the evidence"
+
+    questions: dict[str, dict[str, Any]] = {
+        "credibility": {
             "type": "score",
-            "question": "How credible is the defendant's current answer?",
-            "scale": [
-                "1: implausible",
-                "2: barely credible",
-                "3: plausible",
-                "4: credible",
-                "5: very convincing",
+            "instructions": "How credible is `current_answer` as a reply to `current_question`?",
+            "criteria": ["Implausible", "Barely credible", "Plausible", "Credible", "Very convincing"],
+        },
+        "statement_contradiction": {
+            "type": "noul",
+            "instructions": "`current_answer` contradicts at least one of the defendant's `previous_statements`",
+        },
+        "evidence_contradiction": {
+            "type": "noul",
+            "instructions": "`current_answer` is incompatible with at least one item of `evidence`",
+        },
+        "contradicted_evidence": {
+            "type": "choice",
+            "instructions": "Which item of `evidence` does `current_answer` most directly contradict?",
+            "criteria": evidence_criteria,
+        },
+        "evasiveness": {
+            "type": "score",
+            "instructions": "How much does `current_answer` avoid answering `current_question`?",
+            "criteria": [
+                "Answers directly",
+                "Mostly answers",
+                "Answers partially",
+                "Mostly dodges",
+                "Dodges completely",
             ],
         },
-        {
-            "id": "statement_contradiction",
+        "hurts_defense": {
             "type": "noul",
-            "statement": "The current answer contradicts at least one previous statement by the defendant.",
+            "instructions": "`current_answer` weakens the defendant's defense",
         },
-        {
-            "id": "evidence_contradiction",
-            "type": "noul",
-            "statement": "The current answer is incompatible with at least one piece of evidence in the case file.",
-        },
-        {
-            "id": "contradicted_evidence",
+    }
+
+    # A Choice needs real options: only ask once there are previous statements.
+    if request.history:
+        statement_criteria: dict[str, str | None] = {
+            f"S{i + 1}": f'Answer to "{s.question}"' for i, s in enumerate(request.history)
+        }
+        statement_criteria["none"] = "The answer contradicts none of the previous statements"
+        questions["contradicted_statement"] = {
             "type": "choice",
-            "question": "Which piece of evidence does the current answer most directly contradict?",
-            "options": evidence_options,
-        },
-        {
-            "id": "contradicted_statement",
-            "type": "choice",
-            "question": "Which previous statement does the current answer most directly contradict?",
-            "options": statement_options,
-        },
-        {
-            "id": "evasiveness",
-            "type": "score",
-            "question": "How much does the defendant avoid answering the question asked?",
-            "scale": [
-                "1: answers directly",
-                "2: mostly answers",
-                "3: answers partially",
-                "4: mostly dodges",
-                "5: dodges completely",
-            ],
-        },
-        {
-            "id": "hurts_defense",
-            "type": "noul",
-            "statement": "This answer weakens the defendant's defense.",
-        },
-    ]
+            "instructions": "Which of the `previous_statements` does `current_answer` most directly contradict?",
+            "criteria": statement_criteria,
+        }
 
     for juror in jurors:
-        questions.append(
-            {
-                "id": juror.id,
-                "type": "score",
-                "question": (
-                    f"{juror.name}, {juror.description}, is a juror. Considering both the answer "
-                    f"and the defendant's demeanor, does {juror.name} believe this answer?"
-                ),
-                "scale": [
-                    "1: not at all",
-                    "2: barely",
-                    "3: hesitates",
-                    "4: mostly",
-                    "5: completely convinced",
-                ],
-            }
-        )
+        questions[juror.id] = {
+            "type": "score",
+            "instructions": (
+                f"{juror.name}, {juror.description}, is a juror. Considering both `current_answer` "
+                f"and `defendant_demeanor`, does {juror.name} believe this answer?"
+            ),
+            "criteria": ["Not at all", "Barely", "Hesitates", "Mostly", "Completely convinced"],
+        }
 
     return questions

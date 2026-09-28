@@ -16,7 +16,7 @@ backend/            Python + FastAPI — holds the Jev API key, never the browse
   app/
     main.py         API: /api/cases, /api/cases/{id}, /api/evaluate
     questions.py    Jev state + parallel question set
-    evaluators/     mock.py (rule-based, default) and jev.py (real API, TODO)
+    evaluators/     mock.py (rule-based, no key) and jev.py (TypeSafe API)
     request_log.py  JSONL log of every evaluation (backend/logs/)
 frontend/src/
   main.ts           Composition root: picks the API, typing plugins and renderer
@@ -82,16 +82,24 @@ npm run dev
 Steps:
 
 1. Import the GitHub repo in Vercel (keep the project root as the repo root; the framework preset stays "Other").
-2. In **Settings → Environment Variables**, set `EVALUATOR` (`mock` or `jev`), and for Jev `JEV_API_KEY`, `JEV_API_URL`, `JEV_MODEL`.
+2. In **Settings → Environment Variables**, set `JEV_API_KEY` to use Jev (leave it out to play with the mock).
 3. Deploy. Or from the CLI: `npx vercel` (preview) / `npx vercel --prod`.
 
 Python dependencies for the function come from the root `requirements.txt` (keep it in sync with `backend/requirements.txt`). On Vercel, evaluation logs go to `/tmp/logs`, which is not persistent: use a real log sink if you need them in production.
 
 ## Mock vs. Jev
 
-The backend uses the **mock evaluator** by default: simple text rules plus each case's `mockHints` (keywords that trigger an evidence contradiction). This lets you build and play the whole game without the API.
+Without an API key the backend uses the **mock evaluator**: simple text rules plus each case's `mockHints` (keywords that trigger an evidence contradiction). This lets you play the whole game without the API.
 
-To switch to Jev, set `EVALUATOR=jev`, `JEV_API_KEY`, `JEV_API_URL` and a pinned `JEV_MODEL` in `backend/.env`, then implement the request/response mapping in `backend/app/evaluators/jev.py` against TypeSafe's official docs. Both evaluators return the same `EvaluationResult`, so the frontend doesn't change.
+To use **Jev**, set only the API key — locally in `backend/.env`, on Vercel in the project's environment variables:
+
+```
+JEV_API_KEY=your-typesafe-key   # TYPESAFE_API_KEY also works
+```
+
+As soon as a key is present the backend calls `POST https://api.typesafe.ai/v1/systemone` with the pinned model `jev-1.13.0` (see `backend/app/evaluators/jev.py`, format from the [API reference](https://docs.typesafe.ai/api)). Optional overrides: `EVALUATOR=mock` to force the mock, `JEV_MODEL`, `JEV_API_URL`, `JEV_TIMEOUT_S`. Check which one is active at `/api/health`.
+
+If Jev fails (bad key, timeout, unexpected response), `/api/evaluate` returns a 502 with the reason and the game shows it under the answer box.
 
 ## Roadmap
 
@@ -100,7 +108,7 @@ To switch to Jev, set `EVALUATOR=jev`, `JEV_API_KEY`, `JEV_API_URL` and a pinned
 - [x] Reactions and objections wired to thresholds
 - [x] Typing events with instant reactions, sent to Jev as demeanor
 - [x] Verdict and summary screen
-- [ ] Real Jev call (`evaluators/jev.py`)
+- [x] Real Jev call (`evaluators/jev.py`) — needs a real-key test run
 - [ ] Threshold tuning with real playthroughs
 - [ ] Character art to replace the emoji placeholders
 - [ ] More cases

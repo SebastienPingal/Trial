@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import config
 from .cases import get_case, get_case_jurors, load_cases, to_view
 from .evaluators import get_evaluator
+from .evaluators.base import EvaluatorError
 from .request_log import log_evaluation
 from .schemas import CaseSummary, CaseView, EvaluationRequest, EvaluationResult
 
@@ -19,7 +20,8 @@ app.add_middleware(
 
 @app.get("/api/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "evaluator": get_evaluator().name}
+    evaluator = get_evaluator().name
+    return {"status": "ok", "evaluator": evaluator, "model": config.JEV_MODEL if evaluator == "jev" else "mock-1"}
 
 
 @app.get("/api/cases", response_model=list[CaseSummary])
@@ -43,6 +45,9 @@ async def evaluate(request: EvaluationRequest) -> EvaluationResult:
     if not 0 <= request.question_index < len(case.prosecutor_questions):
         raise HTTPException(status_code=422, detail="Invalid question index")
 
-    result = await get_evaluator().evaluate(case, get_case_jurors(case), request)
+    try:
+        result = await get_evaluator().evaluate(case, get_case_jurors(case), request)
+    except EvaluatorError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
     log_evaluation(request, result)
     return result

@@ -23,7 +23,10 @@ export class HttpCourtApi implements CourtApi {
       headers: { 'Content-Type': 'application/json', ...init?.headers },
     });
     if (!response.ok) {
-      throw new Error(`API ${path} failed: ${response.status}`);
+      // FastAPI puts the reason in `detail` (e.g. a Jev error relayed by the backend).
+      const body = (await response.json().catch(() => null)) as { detail?: unknown } | null;
+      const detail = typeof body?.detail === 'string' ? `: ${body.detail}` : '';
+      throw new Error(`API ${path} failed (${response.status})${detail}`);
     }
     return response.json() as Promise<T>;
   }
