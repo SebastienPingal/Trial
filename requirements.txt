@@ -1,0 +1,5 @@
+# Python dependencies for the Vercel function (api/index.py). Keep in sync with backend/requirements.txt.
+fastapi>=0.110
+pydantic>=2.6
+httpx>=0.27
+python-dotenv>=1.0

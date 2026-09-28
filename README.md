@@ -72,6 +72,21 @@ npm install
 npm run dev
 ```
 
+## Deploying on Vercel
+
+`vercel.json` deploys everything as one project:
+
+- the frontend is built from `frontend/` and served statically (`frontend/dist`);
+- the FastAPI backend runs as a Python serverless function (`api/index.py`), reached at `/api/*` on the same domain, so no CORS setup is needed.
+
+Steps:
+
+1. Import the GitHub repo in Vercel (keep the project root as the repo root; the framework preset stays "Other").
+2. In **Settings → Environment Variables**, set `EVALUATOR` (`mock` or `jev`), and for Jev `JEV_API_KEY`, `JEV_API_URL`, `JEV_MODEL`.
+3. Deploy. Or from the CLI: `npx vercel` (preview) / `npx vercel --prod`.
+
+Python dependencies for the function come from the root `requirements.txt` (keep it in sync with `backend/requirements.txt`). On Vercel, evaluation logs go to `/tmp/logs`, which is not persistent: use a real log sink if you need them in production.
+
 ## Mock vs. Jev
 
 The backend uses the **mock evaluator** by default: simple text rules plus each case's `mockHints` (keywords that trigger an evidence contradiction). This lets you build and play the whole game without the API.
