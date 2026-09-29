@@ -14,6 +14,8 @@ Paste the **Context** section into UX Pilot, then use the two prompts in **Reque
 
 **It must look and feel like a video game, not a website.** It runs in the browser, but nothing should remind the player of a web page or an app: no navigation bar, no header/footer, no page layout with sections, no form fields, standard text inputs, standard buttons, cards, tabs, drawers or scrollbars. The screen is a full-screen game scene. Every element — the question, the player's answer, the actions, the case file, the progress — must be part of the game world or of a game HUD, so the player never leaves the atmosphere of the trial.
 
+**Mood: slightly whimsical, in the spirit of Phoenix Wright: Ace Attorney.** The trial is tense, but the tone has a playful, theatrical touch: expressive, slightly exaggerated characters and reactions, dramatic comedic moments (a juror nearly falling off their chair, the lawyer sweating buckets, the prosecutor slamming the desk), punchy "Objection!" moments. Take inspiration from that mood, without copying its visual style.
+
 **Case used in the mockup:** *The Verdier Manor Affair*
 
 Situation: "On March 14 at 11:10 PM, you were found in the living room of Verdier Manor, kneeling beside the body of Henri Verdier, your hands covered in blood."
