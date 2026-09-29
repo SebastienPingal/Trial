@@ -12,6 +12,8 @@ Paste the **Context** section into UX Pilot, then use the two prompts in **Reque
 
 **Audience.** Adults who enjoy narrative and detective games. Sessions of about 10 minutes. Desktop first (lots of typing), must also work on mobile.
 
+**It must look and feel like a video game, not a website.** It runs in the browser, but nothing should remind the player of a web page or an app: no navigation bar, no header/footer, no page layout with sections, no form fields, standard text inputs, standard buttons, cards, tabs, drawers or scrollbars. The screen is a full-screen game scene. Every element — the question, the player's answer, the actions, the case file, the progress — must be part of the game world or of a game HUD, so the player never leaves the atmosphere of the trial.
+
 **Case used in the mockup:** *The Verdier Manor Affair*
 
 Situation: "On March 14 at 11:10 PM, you were found in the living room of Verdier Manor, kneeling beside the body of Henri Verdier, your hands covered in blood."
@@ -48,7 +50,7 @@ Characters:
   - Lawyer: neutral, confident, panic.
   - Prosecutor: impassive, suspicious, attacking.
   - Each reaction has an intensity: while the player is typing, reactions are tentative (half strength); after submitting, they are full strength.
-- A free-text answer field with an "Answer" button (Enter submits, Shift+Enter adds a new line), and a locked state while the answer is being evaluated.
+- A way for the player to type a free-text answer and submit it (Enter submits, Shift+Enter adds a new line), with a locked state while the answer is being evaluated. It must not look like a web form field.
 - Progress through the trial ("Question 2 / 6").
 - Access at any time to the case file (the 6 exhibits) and to the player's previous statements.
 - Short-lived cues when the court notices how the player types: heavy deleting, long hesitation, typing too fast.
@@ -59,7 +61,7 @@ Characters:
 ## Requests
 
 ### 1. Main trial screen
-> Propose a mockup for the main trial screen of this game, desktop (1440×900) plus a mobile version. The question, the characters' faces and the answer field should be visible at the same time without scrolling. Show the screen while the player is typing, and the same screen right after submitting with an "Objection!" on exhibit P5. Propose your own art direction.
+> Propose a mockup for the main trial screen of this game, as a full-screen video game scene (1920×1080, 16:9) plus a mobile version. It must look like a real game, not a website: no web page layout, no standard form inputs or buttons. The question, the characters' faces and the player's answer should be visible at the same time. Show the screen while the player is typing, and the same screen right after submitting with an "Objection!" on exhibit P5. Propose your own art direction.
 
 ### 2. Design system
-> Create a design system for this game: color palette, typography, spacing, iconography, and the core components with their states (character card with each expression and intensity, question display, answer field, buttons, exhibit card, statement entry, objection alert, typing cue, progress indicator, case-file panel). Keep it consistent with the trial screen mockup.
+> Create a game UI design system for this game (as used in video games, not a web design system): color palette, typography, iconography, and the core game UI elements with their states (character portrait with each expression and intensity, question dialogue, answer input, actions, exhibit, previous statement, objection moment, typing cue, progress, case file). Every element must belong to the game world or to a game HUD, never look like a web component. Keep it consistent with the trial screen mockup.
