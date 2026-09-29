@@ -52,10 +52,12 @@ Characters:
   - Lawyer: neutral, confident, panic.
   - Prosecutor: impassive, suspicious, attacking.
   - Each reaction has an intensity: while the player is typing, reactions are tentative (half strength); after submitting, they are full strength.
+  - **The characters' state is shown only through their faces and body language.** No gauges, dots, bars, scores, icons or text labels describing what a juror thinks. The player must read the jurors like real people.
 - A way for the player to type a free-text answer and submit it (Enter submits, Shift+Enter adds a new line), with a locked state while the answer is being evaluated. It must not look like a web form field.
 - Progress through the trial ("Question 2 / 6").
 - Access at any time to the case file (the 6 exhibits) and to the player's previous statements.
-- Short-lived cues when the court notices how the player types: heavy deleting, long hesitation, typing too fast.
+- **Hidden mechanic — how the player types.** The game secretly watches how the player types (heavy deleting, long hesitation, typing too fast). This is never shown on screen: no indicator, label, icon, toast or "typing…" status. The only feedback is the characters' faces reacting (a juror frowning when the player erases a lot, the prosecutor narrowing their eyes when the player hesitates).
+- Keep the HUD minimal: only what the player needs to play. Anything that reveals the game's inner workings breaks the immersion.
 - After submitting: the submitted answer, a possible prosecutor interruption — "Objection!" pointing to a specific exhibit, "Objection!" recalling an earlier statement, or "Answer the question!" — and a "Next question" button.
 
 ---
@@ -66,4 +68,4 @@ Characters:
 > Propose a mockup for the main trial screen of this game, as a full-screen video game scene (1920×1080, 16:9) plus a mobile version. It must look like a real game, not a website: no web page layout, no standard form inputs or buttons. The question, the characters' faces and the player's answer should be visible at the same time. Show the screen while the player is typing, and the same screen right after submitting with an "Objection!" on exhibit P5. Propose your own art direction.
 
 ### 2. Design system
-> Create a game UI design system for this game (as used in video games, not a web design system): color palette, typography, iconography, and the core game UI elements with their states (character portrait with each expression and intensity, question dialogue, answer input, actions, exhibit, previous statement, objection moment, typing cue, progress, case file). Every element must belong to the game world or to a game HUD, never look like a web component. Keep it consistent with the trial screen mockup.
+> Create a game UI design system for this game (as used in video games, not a web design system): color palette, typography, iconography, and the core game UI elements with their states (character portrait with each expression and intensity, question dialogue, answer input, actions, exhibit, previous statement, objection moment, progress, case file). Every element must belong to the game world or to a game HUD, never look like a web component. Keep it consistent with the trial screen mockup.
