@@ -6,7 +6,7 @@ import { App } from './App';
 import { GameProvider } from './gameContext';
 import './styles.css';
 
-/** DOM renderer built with React components and emoji placeholder faces. */
+/** DOM renderer built with React components, with placeholder boxes until the art exists. */
 export class ReactRenderer implements Renderer {
   private root: Root | null = null;
 

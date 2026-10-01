@@ -1,40 +1,20 @@
-import type { CSSProperties } from 'react';
-
-// Placeholder faces until real character art exists. Keys are expression names.
-const FACES: Record<string, string> = {
-  neutral: '😐',
-  convinced: '🙂',
-  doubt: '🤨',
-  shocked: '😱',
-  confident: '😌',
-  panic: '😰',
-  impassive: '😶',
-  suspicious: '🧐',
-  attacking: '😠',
-};
+import type { CSSProperties, ReactNode } from 'react';
+import { Placeholder } from './Placeholder';
 
 interface CharacterProps {
   name: string;
-  role: string;
-  portrait?: string;
   expression: string;
   intensity: number; // 0..1 — preview reactions are drawn at half strength
-  caption?: string;
+  overlay?: ReactNode; // drawn above the character (e.g. the "Objection!" burst)
 }
 
-export function Character({ name, role, portrait, expression, intensity, caption }: CharacterProps) {
+/** A character sprite. The placeholder will be replaced by one image per expression. */
+export function Character({ name, expression, intensity, overlay }: CharacterProps) {
   const style = { '--intensity': intensity } as CSSProperties;
   return (
     <figure className={`character expr-${expression}`} style={style}>
-      <div className="character-face" aria-label={expression}>
-        {portrait && <span className="character-portrait">{portrait}</span>}
-        <span className="character-expression">{FACES[expression] ?? FACES.neutral}</span>
-      </div>
-      <figcaption>
-        <strong>{name}</strong>
-        <span className="character-role">{role}</span>
-        {caption && <span className="character-caption">{caption}</span>}
-      </figcaption>
+      <Placeholder className="character-sprite" label={`${name} · ${expression}`} />
+      {overlay}
     </figure>
   );
 }

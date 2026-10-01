@@ -1,52 +1,40 @@
-import { NEUTRAL_EXPRESSION, type CourtReaction } from '../../../core/reactions';
+import { NEUTRAL_EXPRESSION, type CourtReaction, type ProsecutorAction } from '../../../core/reactions';
 import type { Juror } from '../../../core/types';
 import { Character } from './Character';
+import { Placeholder } from './Placeholder';
 
 interface CourtroomProps {
   jurors: Juror[];
   reaction: CourtReaction | null;
-  question: string;
+  interruption: ProsecutorAction | null; // shown as a burst above the prosecutor
 }
 
-export function Courtroom({ jurors, reaction, question }: CourtroomProps) {
+export function Courtroom({ jurors, reaction, interruption }: CourtroomProps) {
   const prosecutor = reaction?.prosecutor ?? { expression: 'impassive', intensity: 0 };
   const lawyer = reaction?.lawyer ?? { expression: 'neutral', intensity: 0 };
 
+  const burst = interruption && interruption.kind !== 'none' && (
+    <div className={`objection-burst ${interruption.kind === 'answer-the-question' ? 'warning' : ''}`}>
+      {interruption.kind === 'answer-the-question' ? 'Answer the question!' : 'Objection!'}
+    </div>
+  );
+
   return (
     <section className="courtroom">
-      <div className="jury-box">
+      <div className="bench-row">
         {jurors.map((juror) => {
           const r = reaction?.jurors[juror.id] ?? NEUTRAL_EXPRESSION;
-          return (
-            <Character
-              key={juror.id}
-              name={juror.name}
-              role="Juror"
-              portrait={juror.portrait}
-              expression={r.expression}
-              intensity={r.intensity}
-            />
-          );
+          return <Character key={juror.id} name={juror.name} expression={r.expression} intensity={r.intensity} />;
         })}
-      </div>
-
-      <div className="bench">
         <Character
           name="Prosecutor"
-          role="Prosecution"
-          portrait="🧑‍⚖️"
           expression={prosecutor.expression}
           intensity={prosecutor.intensity}
-          caption={question}
+          overlay={burst}
         />
-        <Character
-          name="Your lawyer"
-          role="Defense"
-          portrait="👨‍💼"
-          expression={lawyer.expression}
-          intensity={lawyer.intensity}
-        />
+        <Character name="Your lawyer" expression={lawyer.expression} intensity={lawyer.intensity} />
       </div>
+      <Placeholder className="bench" label="Bench" />
     </section>
   );
 }

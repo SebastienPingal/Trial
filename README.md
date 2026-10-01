@@ -30,7 +30,7 @@ frontend/src/
   typing/           Typing tracker + one plugin file per typing event
     plugins/          heavyDeleting.ts, longHesitation.ts, rushing.ts
   render/           Rendering engines behind the Renderer interface
-    react/            DOM renderer (React components, emoji faces)
+    react/            DOM renderer (React components, placeholder art)
 ```
 
 ## Architecture
@@ -110,5 +110,6 @@ If Jev fails (bad key, timeout, unexpected response), `/api/evaluate` returns a 
 - [x] Verdict and summary screen
 - [x] Real Jev call (`evaluators/jev.py`) — needs a real-key test run
 - [ ] Threshold tuning with real playthroughs
-- [ ] Character art to replace the emoji placeholders
+- [x] Trial screen laid out as a game scene (16:9 desktop, portrait mobile)
+- [ ] Character, background and exhibit art to replace the placeholders
 - [ ] More cases
