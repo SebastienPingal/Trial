@@ -160,6 +160,11 @@ export class GameEngine implements GameController {
       this.setState({ phase: 'reacting', reaction, action, lawyerHint: null });
       if (action.kind !== 'none') this.bus.emit('prosecutor:action', action);
     },
+    showLawyerHint: (hint) => {
+      if (!this.state.caseView) return;
+      this.setState({ lawyerHint: hint });
+      if (hint) this.bus.emit('lawyer:hint', hint);
+    },
     typingEventKinds: () => this.tracker.kinds(),
     fireTypingEvent: (kind) => {
       if (this.state.phase === 'answering') this.tracker.trigger(kind);

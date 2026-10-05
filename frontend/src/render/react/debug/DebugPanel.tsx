@@ -4,11 +4,12 @@ import { useGame, useGameState } from '../gameContext';
 import { CharactersTab } from './CharactersTab';
 import { EventLog } from './EventLog';
 import { FlowTab } from './FlowTab';
+import { LawyerTab } from './LawyerTab';
 import { ProsecutorTab } from './ProsecutorTab';
 import { TypingTab } from './TypingTab';
 import './debug.css';
 
-const TABS = ['Characters', 'Prosecutor', 'Typing', 'Flow', 'Log'] as const;
+const TABS = ['Characters', 'Prosecutor', 'Lawyer', 'Typing', 'Flow', 'Log'] as const;
 type Tab = (typeof TABS)[number];
 
 export interface TabProps {
@@ -63,6 +64,7 @@ export function DebugPanel() {
       <div className="debug-body">
         {tab === 'Characters' && <CharactersTab state={state} />}
         {tab === 'Prosecutor' && <ProsecutorTab state={state} />}
+        {tab === 'Lawyer' && <LawyerTab state={state} />}
         {tab === 'Typing' && <TypingTab state={state} />}
         {tab === 'Flow' && <FlowTab state={state} />}
         {/* Always mounted so it records events while another tab is shown. */}

@@ -43,6 +43,8 @@ export interface DebugController {
   flashReaction(override: ReactionOverride, durationMs: number): void;
   // Prosecutor
   triggerAction(action: ProsecutorAction): void;
+  // Lawyer (null hides the whisper)
+  showLawyerHint(hint: string | null): void;
   // Typing events
   typingEventKinds(): string[];
   fireTypingEvent(kind: string): void;

@@ -4,7 +4,7 @@ import type { GameEvents } from '../../../core/state';
 
 const MAX_ENTRIES = 100;
 // state:changed fires on every keystroke: too noisy to log.
-const LOGGED: (keyof GameEvents)[] = ['typing:event', 'evaluation:received', 'prosecutor:action', 'verdict'];
+const LOGGED: (keyof GameEvents)[] = ['typing:event', 'evaluation:received', 'prosecutor:action', 'lawyer:hint', 'verdict'];
 
 interface Entry {
   id: number;

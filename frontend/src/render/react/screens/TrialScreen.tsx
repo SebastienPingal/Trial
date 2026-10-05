@@ -48,7 +48,7 @@ export function TrialScreen({ state, caseView }: TrialScreenProps) {
             jurors={caseView.jurors}
             reaction={state.reaction}
             interruption={interruption}
-            lawyerHint={reacting ? state.lawyerHint : null}
+            lawyerHint={state.lawyerHint}
           />
 
           {layout === 'landscape' ? (

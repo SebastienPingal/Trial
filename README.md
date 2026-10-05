@@ -78,6 +78,7 @@ The debug panel is always available in dev (`npm run dev`), and in production by
 
 - **Characters**: force each juror's, the lawyer's and the prosecutor's expression and intensity, as a short flash or locked on top of the game's reactions.
 - **Prosecutor**: trigger an objection (evidence or previous statement) or "Answer the question!" without the backend.
+- **Lawyer**: make the defense lawyer whisper any of their lines (or your own text), or hide the whisper.
 - **Typing**: fire any typing event plugin by hand (same overlay, preview and report to Jev as a detected one).
 - **Flow**: jump to any question, submit an answer with hand-picked scores (or presets), go straight to the verdict, restart.
 - **Log**: the engine's bus events (typing events, evaluations, prosecutor actions, verdict) with their payloads.

@@ -14,7 +14,7 @@ function leaning(score: number): Leaning {
 
 const RANK: Record<Leaning, number> = { doubt: 0, neutral: 1, convinced: 2 };
 
-const LINES = {
+export const LAWYER_LINES = {
   hurtsDefense: [
     'Why would you tell them that?!',
     "Careful… that doesn't help us at all.",
@@ -62,26 +62,26 @@ export function lawyerHint(
 ): string | null {
   const turn = previousTurns.length;
 
-  if (result.hurtsDefense.probability > THRESHOLDS.lawyerPanic) return pick(LINES.hurtsDefense, turn);
+  if (result.hurtsDefense.probability > THRESHOLDS.lawyerPanic) return pick(LAWYER_LINES.hurtsDefense, turn);
 
   const shifts = jurorShifts(jurors, previousTurns[turn - 1], result);
   if (jurors.length > 1 && shifts.length === jurors.length) {
-    if (shifts.every((s) => s.to === 'convinced')) return pick(LINES.juryWon, turn);
-    if (shifts.every((s) => s.to === 'doubt')) return pick(LINES.juryLost, turn);
+    if (shifts.every((s) => s.to === 'convinced')) return pick(LAWYER_LINES.juryWon, turn);
+    if (shifts.every((s) => s.to === 'doubt')) return pick(LAWYER_LINES.juryLost, turn);
   }
   if (shifts.length > 0) {
     const shift = shifts.reduce((a, b) => (Math.abs(b.delta) > Math.abs(a.delta) ? b : a));
     const up = RANK[shift.to] > RANK[shift.from];
     const lines =
-      shift.to === 'convinced' ? LINES.won
-      : shift.to === 'doubt' ? LINES.lost
-      : up ? LINES.recovered
-      : LINES.cooled;
+      shift.to === 'convinced' ? LAWYER_LINES.won
+      : shift.to === 'doubt' ? LAWYER_LINES.lost
+      : up ? LAWYER_LINES.recovered
+      : LAWYER_LINES.cooled;
     return pick(lines, turn, shift.juror.name);
   }
 
   const contradiction = Math.max(result.evidenceContradiction.probability, result.statementContradiction.probability);
-  if (action.kind === 'none' && contradiction > THRESHOLDS.lawyerNearObjection) return pick(LINES.nearObjection, turn);
+  if (action.kind === 'none' && contradiction > THRESHOLDS.lawyerNearObjection) return pick(LAWYER_LINES.nearObjection, turn);
 
   return null;
 }
