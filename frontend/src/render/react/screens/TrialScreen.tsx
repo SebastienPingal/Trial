@@ -44,7 +44,12 @@ export function TrialScreen({ state, caseView }: TrialScreenProps) {
       {(layout) => (
         <main className={`trial trial-${layout}`}>
           <Placeholder className="trial-background" label="Courtroom background" />
-          <Courtroom jurors={caseView.jurors} reaction={state.reaction} interruption={interruption} />
+          <Courtroom
+            jurors={caseView.jurors}
+            reaction={state.reaction}
+            interruption={interruption}
+            lawyerHint={reacting ? state.lawyerHint : null}
+          />
 
           {layout === 'landscape' ? (
             caseFile

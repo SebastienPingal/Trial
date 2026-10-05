@@ -43,7 +43,7 @@ Characters:
 - **Karim** — juror, engineer, only believes what fits the facts and the timeline.
 - **Léa** — juror, student, suspicious of the prosecution and of stories that are too polished.
 - **The Prosecutor** — stays impassive until they sense a flaw, then attacks.
-- **Your lawyer** — on the player's side, visibly panics when the player says something that hurts the defense.
+- **Your lawyer** — on the player's side. After an answer, when something notable happened, whispers a short hint about the room ("I think that answer got through to Marthe.", "The prosecutor almost had you there."). Visibly panics when the player says something that hurts the defense.
 
 **What the main trial screen must contain:**
 - The current prosecutor question.
@@ -58,7 +58,7 @@ Characters:
 - Access at any time to the case file (the 6 exhibits) and to the player's previous statements.
 - **Hidden mechanic — how the player types.** The game secretly watches how the player types (heavy deleting, long hesitation, typing too fast). This is never shown on screen: no indicator, label, icon, toast or "typing…" status. The only feedback is the characters' faces reacting (a juror frowning when the player erases a lot, the prosecutor narrowing their eyes when the player hesitates).
 - Keep the HUD minimal: only what the player needs to play. Anything that reveals the game's inner workings breaks the immersion.
-- After submitting: the submitted answer, a possible prosecutor interruption — "Objection!" pointing to a specific exhibit, "Objection!" recalling an earlier statement, or "Answer the question!" — and a "Next question" button.
+- After submitting: the submitted answer, a possible whispered hint from the lawyer, a possible prosecutor interruption — "Objection!" pointing to a specific exhibit, "Objection!" recalling an earlier statement, or "Answer the question!" — and a "Next question" button.
 
 ---
 

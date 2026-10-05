@@ -46,7 +46,7 @@ Each character has at least four expressions: **neutral**, **convinced**, **doub
 
 Since each is evaluated in parallel, the same sentence can convince one and make another doubt, which gives the player a strategy.
 
-**The defense lawyer** is on the player's side, but visibly panics when the player says something that hurts them.
+**The defense lawyer** is on the player's side and is the player's only explicit read of the room. After a submitted answer, and only when something notable happened, they whisper a hint about the other characters: a juror won over or lost ("You lost Karim there…"), the whole jury swinging, or a near objection. They never say *why*. They still visibly panic, and say so, when the player says something that hurts the defense.
 
 **The prosecutor** stays impassive until they smell a flaw, then attacks.
 
@@ -78,7 +78,9 @@ Starting thresholds, to be tuned through testing (see `frontend/src/core/reactio
 | Juror | score ≥ 4 | convinced |
 | Juror | score ≤ 2 | doubt |
 | Juror | score ≤ 2 and contradiction > 0.7 | shocked |
-| Lawyer | hurts_defense > 0.6 | panic |
+| Lawyer | hurts_defense > 0.6 | panic + hint "Why would you tell them that?!" |
+| Lawyer | a juror changes leaning (doubt / neutral / convinced) vs. the previous answer | hint naming the juror with the biggest swing (or the whole jury) |
+| Lawyer | contradiction > 0.5 with no objection | hint "The prosecutor almost had you there." |
 | Prosecutor | evidence_contradiction > 0.75 and evidence ≠ "none" | "Objection!" + show the evidence |
 | Prosecutor | statement_contradiction > 0.75 | "Objection!" + recall the earlier statement |
 | Prosecutor | evasiveness ≥ 4 | "Answer the question!" |

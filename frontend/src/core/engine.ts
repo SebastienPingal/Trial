@@ -2,6 +2,7 @@ import type { CourtApi } from '../api/types';
 import { TypingTracker } from '../typing/tracker';
 import type { TypingEvent, TypingEventEffect, TypingEventPlugin } from '../typing/types';
 import { EventBus } from './eventBus';
+import { lawyerHint } from './lawyer';
 import { applyOverlay, computeReactions, type CourtReaction } from './reactions';
 import { initialState, type GameEvents, type GameState } from './state';
 import type { EvaluationRequest } from './types';
@@ -92,9 +93,11 @@ export class GameEngine implements GameController {
       const reaction = computeReactions(result, 'final');
       const { action } = reaction.prosecutor;
       const turn = { question: this.state.question ?? '', answer: text, result, action };
-      this.setState({ phase: 'reacting', turns: [...this.state.turns, turn], reaction, action });
+      const hint = lawyerHint(result, action, this.state.caseView?.jurors ?? [], this.state.turns);
+      this.setState({ phase: 'reacting', turns: [...this.state.turns, turn], reaction, action, lawyerHint: hint });
       this.bus.emit('evaluation:received', { mode: 'final', result });
       if (action.kind !== 'none') this.bus.emit('prosecutor:action', action);
+      if (hint) this.bus.emit('lawyer:hint', hint);
     } catch (e) {
       this.setState({ phase: 'answering', error: e instanceof Error ? e.message : 'Evaluation failed' });
       this.startTicking();
@@ -152,6 +155,7 @@ export class GameEngine implements GameController {
       answer: '',
       reaction: null,
       action: null,
+      lawyerHint: null,
       error: null,
     });
     this.startTicking();

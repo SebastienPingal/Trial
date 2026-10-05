@@ -281,6 +281,30 @@ button:disabled {
   }
 }
 
+.lawyer-whisper {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 4;
+  margin: 0;
+  padding: 0.5em 0.8em;
+  font-style: italic;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0.1em solid var(--hud-edge);
+  border-radius: 0.8em 0.8em 0.2em 0.8em;
+  box-shadow: 0 0.2em 0.6em rgba(0, 0, 0, 0.4);
+  transform: translateY(-70%);
+  animation: whisper 0.4s ease-out;
+}
+
+@keyframes whisper {
+  from {
+    transform: translateY(-50%);
+    opacity: 0;
+  }
+}
+
 /* Case file: exhibits and previous statements */
 
 .case-file {
@@ -491,6 +515,11 @@ button:disabled {
   font-size: 64px;
 }
 
+.trial-landscape .lawyer-whisper {
+  width: 340px;
+  font-size: 22px;
+}
+
 .trial-landscape .case-file {
   position: absolute;
   top: 32px;
@@ -627,6 +656,11 @@ button:disabled {
 
 .trial-portrait .objection-burst {
   font-size: 20px;
+}
+
+.trial-portrait .lawyer-whisper {
+  width: 180px;
+  font-size: 12px;
 }
 
 .case-file-toggle {

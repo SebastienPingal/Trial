@@ -7,6 +7,8 @@ export const THRESHOLDS = {
   jurorDoubt: 2,
   jurorShockedContradiction: 0.7,
   lawyerPanic: 0.6,
+  // Contradiction above this without an objection: the lawyer whispers it was a close call.
+  lawyerNearObjection: 0.5,
   objectionEvidence: 0.75,
   objectionStatement: 0.75,
   evasive: 4,

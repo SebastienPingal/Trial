@@ -17,6 +17,7 @@ export interface GameState {
   turns: TurnRecord[];
   reaction: CourtReaction | null; // faces to display right now (preview, event overlay or final)
   action: ProsecutorAction | null; // prosecutor action after the last submitted answer
+  lawyerHint: string | null; // what the lawyer whispers after the last submitted answer
   verdict: Verdict | null;
 }
 
@@ -31,6 +32,7 @@ export const initialState: GameState = {
   turns: [],
   reaction: null,
   action: null,
+  lawyerHint: null,
   verdict: null,
 };
 
@@ -40,5 +42,6 @@ export interface GameEvents {
   'typing:event': TypingEvent;
   'evaluation:received': { mode: EvaluationMode; result: EvaluationResult };
   'prosecutor:action': ProsecutorAction;
+  'lawyer:hint': string;
   verdict: Verdict;
 }
