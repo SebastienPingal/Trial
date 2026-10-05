@@ -72,6 +72,18 @@ npm install
 npm run dev
 ```
 
+### Debug tools
+
+In dev (`npm run dev` only, never in a production build), press <kbd>`</kbd> or click 🐞 to open the debug panel:
+
+- **Characters**: force each juror's, the lawyer's and the prosecutor's expression and intensity, as a short flash or locked on top of the game's reactions.
+- **Prosecutor**: trigger an objection (evidence or previous statement) or "Answer the question!" without the backend.
+- **Typing**: fire any typing event plugin by hand (same overlay, preview and report to Jev as a detected one).
+- **Flow**: jump to any question, submit an answer with hand-picked scores (or presets), go straight to the verdict, restart.
+- **Log**: the engine's bus events (typing events, evaluations, prosecutor actions, verdict) with their payloads.
+
+The panel only drives the engine through `engine.debug` (`frontend/src/core/debug.ts`).
+
 ## Deploying on Vercel
 
 `vercel.json` deploys everything as one project:

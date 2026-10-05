@@ -55,6 +55,16 @@ export class TypingTracker {
     }
   }
 
+  /** Fires a plugin's event by hand, whatever its detection says (debug tools). */
+  trigger(kind: string): void {
+    const plugin = this.plugins.find((p) => p.kind === kind);
+    if (plugin) this.fire(plugin, Date.now());
+  }
+
+  kinds(): string[] {
+    return this.plugins.map((p) => p.kind);
+  }
+
   summary(): TypingSummary {
     const m = this.metrics;
     const now = Date.now();

@@ -1,11 +1,18 @@
 import type { CourtApi } from '../api/types';
 import { TypingTracker } from '../typing/tracker';
 import type { TypingEvent, TypingEventEffect, TypingEventPlugin } from '../typing/types';
+import {
+  applyReactionOverride,
+  fakeEvaluation,
+  mergeOverrides,
+  type DebugController,
+  type ReactionOverride,
+} from './debug';
 import { EventBus } from './eventBus';
 import { lawyerHint } from './lawyer';
-import { applyOverlay, computeReactions, type CourtReaction } from './reactions';
+import { applyOverlay, computeReactions, NEUTRAL_EXPRESSION, type CourtReaction } from './reactions';
 import { initialState, type GameEvents, type GameState } from './state';
-import type { EvaluationRequest } from './types';
+import type { EvaluationRequest, EvaluationResult } from './types';
 import { computeVerdict } from './verdict';
 
 const TICK_MS = 500;
@@ -24,6 +31,7 @@ export interface GameController {
   submit(): Promise<void>;
   next(): void;
   restart(): void;
+  readonly debug: DebugController;
 }
 
 /**
@@ -33,6 +41,7 @@ export interface GameController {
 export class GameEngine implements GameController {
   readonly bus = new EventBus<GameEvents>();
   private state: GameState = initialState;
+  private view: GameState = initialState; // state as displayed: `state` with debug overrides applied
   private readonly api: CourtApi;
   private readonly tracker: TypingTracker;
 
@@ -42,13 +51,17 @@ export class GameEngine implements GameController {
   private tickTimer: number | undefined;
   private previewSeq = 0; // numbers preview requests; stale responses are dropped
 
+  private debugOverride: ReactionOverride | null = null;
+  private debugFlash: ReactionOverride | null = null;
+  private debugFlashTimer: number | undefined;
+
   constructor({ api, typingPlugins }: EngineOptions) {
     this.api = api;
     this.tracker = new TypingTracker(typingPlugins, (event) => this.onTypingEvent(event));
   }
 
   getState(): GameState {
-    return this.state;
+    return this.view;
   }
 
   async load(): Promise<void> {
@@ -90,14 +103,7 @@ export class GameEngine implements GameController {
         mode: 'final',
         typing: this.tracker.summary(),
       });
-      const reaction = computeReactions(result, 'final');
-      const { action } = reaction.prosecutor;
-      const turn = { question: this.state.question ?? '', answer: text, result, action };
-      const hint = lawyerHint(result, action, this.state.caseView?.jurors ?? [], this.state.turns);
-      this.setState({ phase: 'reacting', turns: [...this.state.turns, turn], reaction, action, lawyerHint: hint });
-      this.bus.emit('evaluation:received', { mode: 'final', result });
-      if (action.kind !== 'none') this.bus.emit('prosecutor:action', action);
-      if (hint) this.bus.emit('lawyer:hint', hint);
+      this.applyFinalResult(text, result);
     } catch (e) {
       this.setState({ phase: 'answering', error: e instanceof Error ? e.message : 'Evaluation failed' });
       this.startTicking();
@@ -124,14 +130,101 @@ export class GameEngine implements GameController {
   destroy(): void {
     this.stopTicking();
     this.clearOverlay();
+    window.clearTimeout(this.debugFlashTimer);
     this.bus.clear();
   }
+
+  readonly debug: DebugController = {
+    setReactionOverride: (override) => {
+      this.debugOverride = override;
+      this.publish();
+    },
+    flashReaction: (override, durationMs) => {
+      window.clearTimeout(this.debugFlashTimer);
+      this.debugFlash = override;
+      this.publish();
+      this.debugFlashTimer = window.setTimeout(() => {
+        this.debugFlash = null;
+        this.publish();
+      }, durationMs);
+    },
+    triggerAction: (action) => {
+      const { phase } = this.state;
+      if (phase !== 'answering' && phase !== 'evaluating' && phase !== 'reacting') return;
+      this.previewSeq += 1;
+      this.stopTicking();
+      this.clearOverlay();
+      const base = this.state.reaction ?? this.neutralReaction();
+      const expression = action.kind === 'none' ? 'impassive' : 'attacking';
+      const reaction = { ...base, prosecutor: { expression, intensity: 1, action } } satisfies CourtReaction;
+      this.setState({ phase: 'reacting', reaction, action, lawyerHint: null });
+      if (action.kind !== 'none') this.bus.emit('prosecutor:action', action);
+    },
+    typingEventKinds: () => this.tracker.kinds(),
+    fireTypingEvent: (kind) => {
+      if (this.state.phase === 'answering') this.tracker.trigger(kind);
+    },
+    goToQuestion: (index) => {
+      const count = this.state.caseView?.prosecutorQuestions.length ?? 0;
+      if (count === 0) return;
+      const target = Math.max(0, Math.min(index, count - 1));
+      this.previewSeq += 1;
+      this.setState({ turns: this.state.turns.slice(0, target), verdict: null });
+      this.beginQuestion(target);
+    },
+    simulateAnswer: (params) => {
+      if (this.state.phase !== 'answering') return;
+      this.previewSeq += 1;
+      this.stopTicking();
+      this.clearOverlay();
+      this.applyFinalResult(this.state.answer.trim() || '(debug answer)', fakeEvaluation(params));
+    },
+    showVerdict: () => {
+      if (!this.state.caseView) return;
+      this.previewSeq += 1;
+      this.stopTicking();
+      this.clearOverlay();
+      const verdict = computeVerdict(this.state.caseView.jurors, this.state.turns);
+      this.setState({ phase: 'verdict', verdict });
+      this.bus.emit('verdict', verdict);
+    },
+  };
 
   // --- internals -------------------------------------------------------------
 
   private setState(patch: Partial<GameState>): void {
     this.state = { ...this.state, ...patch };
-    this.bus.emit('state:changed', this.state);
+    this.publish();
+  }
+
+  private publish(): void {
+    const override = mergeOverrides(this.debugOverride, this.debugFlash);
+    const jurorIds = this.state.caseView?.jurors.map((j) => j.id) ?? [];
+    this.view = override
+      ? { ...this.state, reaction: applyReactionOverride(this.state.reaction, jurorIds, override) }
+      : this.state;
+    this.bus.emit('state:changed', this.view);
+  }
+
+  private applyFinalResult(answer: string, result: EvaluationResult): void {
+    const reaction = computeReactions(result, 'final');
+    const { action } = reaction.prosecutor;
+    const turn = { question: this.state.question ?? '', answer, result, action };
+    const hint = lawyerHint(result, action, this.state.caseView?.jurors ?? [], this.state.turns);
+    this.setState({ phase: 'reacting', turns: [...this.state.turns, turn], reaction, action, lawyerHint: hint });
+    this.bus.emit('evaluation:received', { mode: 'final', result });
+    if (action.kind !== 'none') this.bus.emit('prosecutor:action', action);
+    if (hint) this.bus.emit('lawyer:hint', hint);
+  }
+
+  private neutralReaction(): CourtReaction {
+    const jurors: CourtReaction['jurors'] = {};
+    for (const juror of this.state.caseView?.jurors ?? []) jurors[juror.id] = NEUTRAL_EXPRESSION;
+    return {
+      jurors,
+      lawyer: { expression: 'neutral', intensity: 0 },
+      prosecutor: { expression: 'impassive', intensity: 0, action: { kind: 'none' } },
+    };
   }
 
   private baseRequest(): Omit<EvaluationRequest, 'answer' | 'mode'> {
