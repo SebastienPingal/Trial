@@ -74,7 +74,7 @@ npm run dev
 
 ### Debug tools
 
-In dev (`npm run dev` only, never in a production build), press <kbd>`</kbd> or click 🐞 to open the debug panel:
+The debug panel is always available in dev (`npm run dev`), and in production by adding `?debug` to the URL (e.g. `https://…/?debug`). Press <kbd>`</kbd> or click 🐞 to open it:
 
 - **Characters**: force each juror's, the lawyer's and the prosecutor's expression and intensity, as a short flash or locked on top of the game's reactions.
 - **Prosecutor**: trigger an objection (evidence or previous statement) or "Answer the question!" without the backend.

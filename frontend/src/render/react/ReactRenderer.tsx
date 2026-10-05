@@ -6,8 +6,9 @@ import { App } from './App';
 import { GameProvider } from './gameContext';
 import './styles.css';
 
-// Dev tools: the constant is false in production builds, so the panel is left out of the bundle.
-const DebugPanel = import.meta.env.DEV
+// Debug tools: always on in dev, opt-in with ?debug in production. Loaded on demand, so players never download them.
+const debugEnabled = import.meta.env.DEV || new URLSearchParams(window.location.search).has('debug');
+const DebugPanel = debugEnabled
   ? lazy(() => import('./debug/DebugPanel').then((m) => ({ default: m.DebugPanel })))
   : null;
 
